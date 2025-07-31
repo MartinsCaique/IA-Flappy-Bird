@@ -170,3 +170,62 @@ def desenhar_tela(tela, passaros, canos, chao, pontos):
     tela.blit(texto, (TELA_LARGURA - 10 - texto.get_width, 10))
     chao.desenhar(tela)
     pygame.display.update()
+
+# Função principal do jogo
+def main():
+    passaros = [Passaro(230, 350)]
+    chao = Chao(730)
+    canos = [Cano(700)]
+    tela = pygame.display.set_mode((TELA_LARGURA, TELA_ALTURA))
+    pontos = 0
+    relogio = pygame.time.Clock()
+
+    rodando = True
+    while rodando:
+        relogio.tick(30)
+
+        # Interação do usuário com o jogo
+        for evento in pygame.event.get():
+            # Sair do jogo
+            if evento.type == pygame.QUIT:
+                rodando = False
+                pygame.quit()
+                quit()
+            
+            # Fazer o pássaro pular
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_SPACE:
+                    for passaro in passaros:
+                        passaro.pular()
+
+        # Mover as coisa
+        for passaro in passaros:
+            passaro.mover()
+        chao.mover()
+
+        adicionar_cano = False
+        remover_canos = []
+        for cano in canos:
+            for i, passaro in enumerate(passaros):
+                if cano.colidir(passaro):
+                    passaros.pop(i)
+                if not cano.passou and passaro.x > cano.x:
+                    cano.passou = True
+                    adicionar_cano = True
+
+            cano.mover()
+            if cano.x + cano.CANO_TOPO.get_width() < 0:
+                remover_canos.append(cano)
+
+        if adicionar_cano:
+            pontos += 1
+            canos.append(Cano(600))
+        for cano in canos:
+            canos.remove(cano)
+
+        for i, passaro in enumerate(passaros):
+            if (passaro.y + passaro.imagem.get_height()) > chao.y or passaro.y < 0:
+                passaros.pop(i)
+
+        # Desenhar a tela do jogo
+        desenhar_tela(tela, passaros, canos, chao, pontos)
